@@ -1,0 +1,38 @@
+.signedup {
+  text-align: center;
+  display: block;
+}
+
+.signedup .text {
+  display: block;
+  width: 40%;
+  border: 1px 1px solid grey;
+  margin: auto;
+  margin-top: 15%;
+  padding: 8rem 0rem;
+  border: 1px solid #4da6ff;
+  text-decoration: none;
+}
+
+.signedup .signedup_success{
+  font-weight: bold;
+}
+
+.signedup .par {
+  display: inline;
+}
+
+.signedup_top {
+  font-size: 25px;
+  margin-bottom: 1rem;
+}
+
+.signedup_bot {
+  font-size: 15px;
+}
+
+.signedup_bot a {
+  color: #4da6ff;
+  cursor: pointer;
+  text-decoration: none;
+}

@@ -1,0 +1,293 @@
+module Components.ToDo.ToDo_update exposing (..)
+
+import Browser
+import Html exposing (..)
+import Html.Attributes exposing (..)
+import Html.Events exposing (..)
+import Time exposing (..)
+import Task
+import List.Extra exposing (removeAt, getAt)
+{- import Components.ToDo.Activity as Activity exposing (..) -}
+import Components.ToDo.Activity_model as Activity_model exposing (..)
+import Components.ToDo.Activity_update as Activity_update exposing (..)
+import Components.ToDo.Activity_view as Activity_view exposing (..)
+import Components.Date.Date_update as Date_update exposing (..)
+import Components.User.User as User exposing (..)
+import Json.Decode as Decode exposing (..)
+import Json.Encode as Encode exposing (..)
+import Json.Decode.Extra as DecodeExtra
+import Json.Decode.Pipeline as Pipeline exposing (required, optional, hardcoded)
+import Http
+import Components.ToDo.ToDo_model as ToDo_model exposing (..)
+
+
+init : Maybe User.Model -> ( ToDo_model.Model, Cmd Msg )
+init user = 
+    case user of
+        Nothing ->
+            ( ToDo_model.Model [] "" 0 [] [] 0 0 0 (Time.millisToPosix 0) False Activity_model.init  Empty "", getTime )
+        Just userA ->
+            ( ToDo_model.Model [] "" 0 [] [] 0 0 0 (Time.millisToPosix 0) False Activity_model.init  Empty userA.username, getTime )
+
+
+---- UPDATE ----
+
+
+type Msg
+    = NoOp
+    | AddActivity
+    | Text String
+    | ChangeMinus
+    | ChangePlus
+    | Activity_msg Int Activity_update.Msg
+    | Response (Result Http.Error Activity_model.Model)
+    | OnTime Time.Posix
+    | LoadActivities (Result Http.Error (List Activity_model.Model))
+    | LoadDoneA (Result Http.Error (List Activity_model.Model))
+    | LoadDoneB (Result Http.Error (List Activity_model.Model))
+
+update : Msg -> ToDo_model.Model -> ( ToDo_model.Model, Cmd Msg )
+update msg model =
+    case msg of
+        NoOp ->
+            ( model, Cmd.none )
+        OnTime time ->
+            ({ model | day = Date_update.getDay time, month = Date_update.getMonth time, year = Date_update.getYear time, act_time = time }, Cmd.none )
+        AddActivity ->
+            case model.activity_text of
+                "" ->
+                    ({ model | activity_warning = 1 }, Cmd.none )
+                _ ->
+                    ({ model | activity_text = "", activities = [] }, createActivity model )
+        Text text ->
+            ( { model | activity_text = text }, Cmd.none )
+        ChangeMinus ->
+            case model.day of
+                1 ->
+                    if model.month == 2 || model.month == 4 || model.month == 6 || model.month == 8 || model.month == 9 || model.month == 11 then
+                        ({ model | day = 31, month = model.month-1, usable = True, activities = [] }, Cmd.batch [ getDoneAA model.username 31 (model.month-1) model.year, getDoneBB model.username 31 (model.month-1) model.year] )
+                    else if model.month == 3 || model.month == 5 || model.month == 7 || model.month == 10 || model.month == 12 then
+                        ({ model | day = 30, month = model.month-1, usable = True, activities = [] }, Cmd.batch [ getDoneAA model.username 30 (model.month-1) model.year, getDoneBB model.username 30 (model.month-1) model.year ] )
+                    else
+                        ({ model | day = 31, month = 12, year = model.year-1, usable = True, activities = [] }, Cmd.batch [ getDoneAA model.username 31 12 (model.year-1), getDoneBB model.username 31 12 (model.year-1) ] )
+                _ ->
+                    ({ model | day = model.day-1, usable = True, activities = [] }, Cmd.batch [ getDoneAA model.username (model.day-1) model.month model.year, getDoneBB model.username (model.day-1) model.month model.year ] )         
+        ChangePlus ->
+            if model.month == 2 || model.month == 4 || model.month == 6 || model.month == 8 || model.month == 9 || model.month == 11 then
+                case model.day of
+                    30 ->
+                        if 1 == (Date_update.getDay model.act_time) && model.month+1 == (Date_update.getMonth model.act_time) && model.year == (Date_update.getYear model.act_time) then
+                            ({ model | day = 1, month = model.month+1, usable = False }, getActivitiesA model.username )
+                        else
+                            ({ model | day = 1, month = model.month+1 }, Cmd.batch [ getDoneAA model.username 1 (model.month+1) model.year, getDoneBB model.username 1 (model.month+1) model.year ] )
+                    _ ->
+                        if model.day+1 == (Date_update.getDay model.act_time) && model.month == (Date_update.getMonth model.act_time) && model.year == (Date_update.getYear model.act_time) then
+                            ({ model | day = model.day+1, usable = False }, getActivitiesA model.username )
+                        else
+                            ({ model | day = model.day+1 }, Cmd.batch [ getDoneAA model.username (model.day+1) model.month model.year, getDoneBB model.username (model.day+1) model.month model.year ] )
+            else if model.month == 3 || model.month == 5 || model.month == 7 || model.month == 10 || model.month == 1 then
+                case model.day of
+                    31 ->
+                        if 1 == (Date_update.getDay model.act_time) && model.month+1 == (Date_update.getMonth model.act_time) && model.year == (Date_update.getYear model.act_time) then
+                            ({ model | day = 1, month = model.month+1, usable = False }, getActivitiesA model.username )
+                        else
+                            ({ model | day = 1, month = model.month+1 }, Cmd.batch [ getDoneAA model.username 1 (model.month+1) model.year, getDoneBB model.username 1 (model.month+1) model.year ] )
+                    _ ->
+                        if model.day+1 == (Date_update.getDay model.act_time) && model.month == (Date_update.getMonth model.act_time) && model.year == (Date_update.getYear model.act_time) then
+                            ({ model | day = model.day+1, usable = False }, getActivitiesA model.username )
+                        else
+                            ({ model | day = model.day+1 }, Cmd.batch [ getDoneAA model.username (model.day+1) model.month model.year, getDoneBB model.username (model.day+1) model.month model.year ] )
+            else
+                case model.day of
+                    31 ->
+                        if 1 == (Date_update.getDay model.act_time) && 1 == (Date_update.getMonth model.act_time) && model.year+1 == (Date_update.getYear model.act_time) then
+                            ({ model | day = 1, month = 1, year = model.year+1, usable = False }, getActivitiesA model.username )
+                        else
+                            ({ model | day = 1, month = 1, year = model.year+1 }, Cmd.batch [ getDoneAA model.username 1 1 (model.year+1), getDoneBB model.username 1 1 (model.year+1) ] )
+                    _ ->
+                        if model.day+1 == (Date_update.getDay model.act_time) && model.month == (Date_update.getMonth model.act_time) && model.year == (Date_update.getYear model.act_time) then
+                            ({ model | day = model.day+1, usable = False }, getActivitiesA model.username )
+                        else
+                            ({ model | day = model.day+1 }, Cmd.batch [ getDoneAA model.username (model.day+1) model.month model.year, getDoneBB model.username (model.day+1) model.month model.year ] )
+        Activity_msg ind childMsg ->
+            case childMsg of
+                AcitivityRemove ->
+                    ( { model | activities = [] }, removeActivity (getId (getAt ind model.activities)) )
+                AcitivityDone ->
+                    ( { model | activities = [] }, doneActivity (getId (getAt ind model.activities)) (Date_update.getDate model.day model.month model.year) )
+                _ ->
+                    ( { model | activities = List.filter isActive (List.indexedMap (\index activity -> 
+                        if index == ind then
+                            Activity_update.update childMsg activity
+                        else
+                            activity) model.activities) }, Cmd.none )
+        Response response ->
+            case response of
+                Ok activity ->
+                    ( { model | status = Success "" }, getActivitiesA model.username )
+                Err log ->
+                    ( { model | status = ToDo_model.Failure log }, Cmd.none )
+        LoadActivities response ->
+            case response of
+                Ok activities ->
+                    ( { model | activities = activities }, Cmd.batch [ getDoneAA model.username model.day model.month model.year, getDoneBB model.username model.day model.month model.year ] )
+                Err _ ->
+                    ( model , Cmd.none )
+        LoadDoneA response ->
+            case response of
+                Ok activities ->
+                    ( { model | done_right = activities }, Cmd.none )
+                Err _ ->
+                    ( model, Cmd.none )
+        LoadDoneB response ->
+            case response of
+                Ok activities ->
+                    ( { model | done_left = activities }, Cmd.none )
+                Err _ ->
+                    ( model, Cmd.none )
+
+getTime : Cmd Msg
+getTime =
+    Task.perform OnTime Time.now
+
+isActive : Activity_model.Model -> Bool
+isActive activity_model =
+    if activity_model.active then
+        True
+    else
+        False
+
+isNotActive : Activity_model.Model -> Bool
+isNotActive activity_model =
+    if activity_model.active == False then
+        True
+    else
+        False
+
+viewActivity : Int -> Activity_model.Model -> Html Msg
+viewActivity index activity =
+    Activity_view.view activity |> Html.map ( Activity_msg index )
+
+getModel : ( ToDo_model.Model, Cmd Msg ) -> ToDo_model.Model
+getModel  ( model, msg ) =
+    model
+
+encodeActivity : ToDo_model.Model -> Encode.Value
+encodeActivity model =
+    Encode.object[
+        ("username", Encode.string model.username)
+        , ("name", Encode.string model.activity_text)
+        , ("active", Encode.bool True)
+    ]
+
+createActivity : ToDo_model.Model -> Cmd Msg
+createActivity model =
+    Http.post
+    {
+        url = "http://localhost:5000/addActivity"
+        , body = Http.jsonBody <| encodeActivity model
+        , expect = Http.expectJson LoadActivities (Decode.list Activity_update.decodeActivity)
+    }
+
+encodeId : Int -> Encode.Value
+encodeId id = 
+    Encode.object[
+        ("id", Encode.int id)
+    ]
+
+removeActivity : Int -> Cmd Msg
+removeActivity id =
+    Http.post
+    {
+        url = "http://localhost:5000/removeActivity"
+        , body = Http.jsonBody <| encodeId id
+        , expect = Http.expectJson LoadActivities (Decode.list Activity_update.decodeActivity)
+    } 
+
+encodeIdDate : Int -> String -> Encode.Value
+encodeIdDate id date = 
+    Encode.object[
+        ("id", Encode.int id)
+        , ("date", Encode.string date)
+    ]
+
+doneActivity : Int -> String -> Cmd Msg
+doneActivity id date = 
+    Http.post
+    {
+        url = "http://localhost:5000/doneActivity"
+        , body = Http.jsonBody <| encodeIdDate id date
+        , expect = Http.expectJson LoadActivities (Decode.list Activity_update.decodeActivity)
+    } 
+
+getActivities : Maybe User.Model -> Cmd Msg
+getActivities user =
+    case user of
+            Nothing ->
+                Http.get
+                {
+                    url = "http://localhost:5000/getActivities" ++ "?username=" ++ ""
+                    , expect = Http.expectJson LoadActivities (Decode.list Activity_update.decodeActivity)
+                }
+            Just userA ->
+                Http.get
+                {
+                    url = "http://localhost:5000/getActivities" ++ "?username=" ++ userA.username
+                    , expect = Http.expectJson LoadActivities (Decode.list Activity_update.decodeActivity)
+                }
+
+getActivitiesA : String -> Cmd Msg
+getActivitiesA username =
+    Http.get
+    {
+        url = "http://localhost:5000/getActivities" ++ "?username=" ++ username
+        , expect = Http.expectJson LoadActivities (Decode.list Activity_update.decodeActivity)
+    }
+
+getDoneA : Maybe User.Model -> ToDo_model.Model -> Cmd Msg
+getDoneA user model =
+    case user of
+            Nothing ->
+                Http.get
+                {
+                    url = "http://localhost:5000/getDoneA" ++ "?username=" ++ ""
+                    , expect = Http.expectJson LoadDoneA (Decode.list Activity_update.decodeActivity)
+                }
+            Just userA ->
+                Http.get
+                {
+                    url = "http://localhost:5000/getDoneA" ++ "?username=" ++ userA.username ++ "&" ++ "date=" ++ ( Date_update.getDate model.day model.month model.year )
+                    , expect = Http.expectJson LoadDoneA (Decode.list Activity_update.decodeActivity)
+                }
+
+getDoneAA : String -> Int -> Int -> Int -> Cmd Msg
+getDoneAA username day month year =
+    Http.get
+        {
+            url = "http://localhost:5000/getDoneA" ++ "?username=" ++ username ++ "&" ++ "date=" ++ ( Date_update.getDate day month year )
+            , expect = Http.expectJson LoadDoneA (Decode.list Activity_update.decodeActivity)
+        }
+
+getDoneB : Maybe User.Model -> ToDo_model.Model -> Cmd Msg
+getDoneB user model =
+    case user of
+            Nothing ->
+                Http.get
+                {
+                    url = "http://localhost:5000/getDoneA" ++ "?username=" ++ ""
+                    , expect = Http.expectJson LoadDoneB (Decode.list Activity_update.decodeActivity)
+                }
+            Just userA ->
+                Http.get
+                {
+                    url = "http://localhost:5000/getDoneA" ++ "?username=" ++ userA.username ++ "&" ++ "date=" ++ ( Date_update.getDateMinus model.day model.month model.year )
+                    , expect = Http.expectJson LoadDoneB (Decode.list Activity_update.decodeActivity)
+                }
+    
+getDoneBB : String -> Int -> Int -> Int -> Cmd Msg
+getDoneBB username day month year =
+    Http.get
+        {
+            url = "http://localhost:5000/getDoneA" ++ "?username=" ++ username ++ "&" ++ "date=" ++ ( Date_update.getDateMinus day month year )
+            , expect = Http.expectJson LoadDoneB (Decode.list Activity_update.decodeActivity)
+        }

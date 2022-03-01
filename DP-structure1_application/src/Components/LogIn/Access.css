@@ -1,0 +1,42 @@
+.access {
+  text-align: center;
+  display: block;
+}
+
+.access .text {
+  display: block;
+  width: 40%;
+  border: 1px 1px solid grey;
+  margin: auto;
+  margin-top: 15%;
+  padding: 8rem 0rem;
+  border: 1px solid #4da6ff;
+}
+
+.access .access_success{
+  font-weight: bold;
+}
+
+.access .par {
+  display: inline;
+}
+
+.access_top {
+  font-size: 25px;
+  margin-bottom: 1rem;
+}
+
+.access_bot {
+  font-size: 15px;
+  margin-bottom: 0.2rem;
+}
+
+.access_bot a, .access_bottom a {
+  color: #4da6ff;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.access_bottom {
+  font-size: 12px;
+}

@@ -1,0 +1,134 @@
+.to_do_component {
+  text-align: center;
+}
+
+.to_do {
+  margin: auto;
+  margin-top: 8rem;
+  width: 80%;
+  min-height: 80%;
+}
+
+.to_do_heading {
+  margin: 1.5rem 0rem 3.25rem;
+}
+
+.to_do h2 {
+  font-size: 25px;
+  font-weight: bold;
+}
+
+.to_do_day h2 {
+  font-size: 17px;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px dashed #cdcdcd;
+}
+
+.to_do_buttons {
+  text-align: center;
+  margin: 2.5rem 18% 0rem;
+}
+
+.to_do_buttons a {
+  font-size: 20px;
+  padding: 5px 50px;
+  margin: 0px 10px;
+
+  color: #666666;
+  background-color: white;
+  border: solid 3px #4da6ff;
+  box-shadow: 6px 6px #4da6ff;
+
+  position: relative;
+  top: 0px;
+  left: 0px;
+  transition: 0.2s;
+}
+
+.to_do_buttons a:hover {
+  cursor: pointer;
+  color: #0d0d0d;
+  box-shadow: 2px 2px #4da6ff;
+
+  position: relative;
+  top: 4px;
+  left: 4px;
+}
+
+.to_do_buttons input {
+  text-align: center;
+  outline-color: #4da6ff;
+  color: #666666;
+  font-size: 18px;
+  padding: 5px 0px;
+  margin: 0px 10px;
+}
+
+.to_do_warning {
+  display: block;
+  color: red;
+  font-weight: bold;
+  height: 1rem;
+}
+
+.to_do_day {
+  width: 49%;
+  min-height: 40rem;
+  display: inline-block;
+  vertical-align: top;
+  max-height: 35rem;
+  overflow: hidden;
+}
+
+.activities {
+  max-height: 35rem;
+  overflow: auto;
+  margin-bottom: 2rem;
+}
+
+.activities::-webkit-scrollbar {
+  width: 5px;
+}
+
+.activities::-webkit-scrollbar-track {
+  background-color: white;
+}
+
+.activities::-webkit-scrollbar-thumb {
+  background-color: #cdcdcd;
+  border-radius: 10rem;
+}
+
+#today {
+  border-left: 1px solid #cdcdcd;
+}
+
+.to_do_move {
+  position: absolute;
+  top: 45%;
+
+  font-size: 5rem;
+  opacity: 0.5;
+  font-weight: normal;
+  color: #666666;
+  cursor: pointer;
+}
+
+#to_do_left {
+  left: 8%;
+}
+
+#to_do_right {
+  right: 8%;
+}
+
+.to_do_move:hover {
+  font-weight: bold;
+  opacity: 1;
+}
+
+.to_do_unusable {
+  display: none;
+}

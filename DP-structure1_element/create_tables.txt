@@ -1,0 +1,19 @@
+CREATE TABLE to_do_activity (
+	id SERIAL PRIMARY KEY,
+	user_id INTEGER NOT NULL,
+	FOREIGN KEY (user_id) REFERENCES user_account(id) ON update cascade on delete restrict,
+	name varchar(255),
+	active boolean,
+	done date
+);
+
+CREATE TABLE user_account (
+	id SERIAL PRIMARY KEY,
+	username varchar(255) UNIQUE,
+	mail varchar(255),
+	password varchar(255),
+	token varchar(255)
+);
+
+DROP TABLE to_do_activity;
+DROP TABLE user_account;

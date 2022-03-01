@@ -1,0 +1,109 @@
+.home {
+  text-align: center;
+  width: 100%;
+  margin-top: 15%;
+}
+
+.home_body {
+  width: 50%;
+  margin: auto;
+  height: 250px;
+}
+
+.home_body > * {
+  vertical-align: middle;
+}
+
+.home_body a {
+  text-decoration: none;
+  margin: 0 10px;
+  color: black;
+}
+
+.home_body img {
+  width: 210px;
+  height: 210px;
+
+  display: inline-block;
+}
+
+.body_heading {
+  display: inline-block;
+  margin-left: 135px;
+}
+
+.body_heading h2 {
+  color: black;
+  margin: 0px;
+  font-weight: normal;
+  font-size: 32px;
+}
+
+.slide h3 {
+  font-weight: normal;
+  color: rgb(100, 100, 100);
+  font-size: 18px;
+  font-style: italic;
+  margin-bottom: 0px;
+}
+
+.slide p {
+  color: rgb(100, 100, 100);
+  font-size: 16px;
+  margin-top: 0px;
+}
+
+.carousel {
+  margin: auto;
+  margin-top: 260px;
+  display: flex;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 750px;
+  height: 70px;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+}
+
+.carousel > div {
+  scroll-snap-align: start;
+}
+
+.slide {
+  width: 750px;
+  flex-shrink: 0;
+  height: 100%;
+}
+
+/* Hide scrollbar in different browsers */
+@supports (scroll-snap-type) {
+  .carousel > a {
+    display: none;
+  }
+}
+
+.carousel {
+  scrollbar-width: none;
+}
+
+.carousel::-webkit-scrollbar {
+  display: none;
+}
+
+.dot a {
+  margin: 0 7px;
+}
+
+.dots {
+  cursor: pointer;
+  height: 7px;
+  width: 7px;
+  background-color: rgb(200, 200, 200);
+  border-radius: 50%;
+  display: inline-block;
+  transition: background-color 0.3s ease;
+}
+
+.dots:hover, .active {
+  background-color: #4da6ff;
+}
