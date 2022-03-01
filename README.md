@@ -5,8 +5,8 @@
 All the stuctures represent the same application, but with different file structures.
 
 To access source code:  
-&nbsp; Open any structure folder ->  
-&nbsp;&nbsp; server ->  
+> Open any structure folder ->  
+>> server ->  
 &nbsp;&nbsp;&nbsp; server.js contains source code with get and post requests in JS  
 &nbsp;&nbsp; src ->  
 &nbsp;&nbsp;&nbsp; Main.elm contains navigation functionality  
